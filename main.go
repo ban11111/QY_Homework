@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+	"QY_Homework/router"
 )
 
 func main() {
-	fmt.Println("test")
+	router.Start_Server()
 }

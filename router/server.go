@@ -2,7 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	. "../handler"
+	. "QY_Homework/handler"
 )
 
 const PublicPath = "/home/qydev/var/www"
@@ -19,9 +19,9 @@ func Start_Server() {
 		// 更新
 		v1.PUT("/demo/:id", Update_demo_Handler)
 		// 获取详情
-		v1.GET("/users", Get_demoinfo_Handler)
+		//v1.GET("/users", Get_demoinfo_Handler)
 		// 获取列表
-		v1.GET("/users", Get_demo_Handler)
+		//v1.GET("/users", Get_demo_Handler)
 	}
 	// 默认启动在8080
 	router.Run(":8080")
