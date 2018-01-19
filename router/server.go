@@ -3,14 +3,13 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	. "QY_Homework/handler"
+	"QY_Homework/service"
 )
-
-const PublicPath = "/home/qydev/var/www"
 
 func Start_Server() {
 	router := gin.Default()   // routes
 	// 将网页路径/public,映射到文件路径/var/www
-	router.Static("/public/", PublicPath)
+	router.Static(service.PublicURL, service.PublicPath)
 	// 请求routes
 	{
 		v1 := router.Group("/v1")

@@ -33,7 +33,12 @@ func check_config(config *config.DbConfig) error {
 	return nil
 }
 
-func ConnetDB(config *config.DbConfig) *gorm.DB{
+var ConnetedDB *gorm.DB
+
+func ConnetDB(config *config.DbConfig) (ConnetedDB *gorm.DB){
+	if ConnetedDB != nil {
+		return
+	}
 	if err := check_config(config); err != nil {
 		panic("数据库配置不正确" + err.Error())
 	}
@@ -45,7 +50,10 @@ func ConnetDB(config *config.DbConfig) *gorm.DB{
 }
 
 
-func ConnetDBtoCreate(config *config.DbConfig) *gorm.DB{
+func ConnetDBtoCreate(config *config.DbConfig) (ConnetedDB *gorm.DB){
+	if ConnetedDB != nil {
+		return
+	}
 	if err := check_config(config); err != nil {
 		panic("数据库配置不正确" + err.Error())
 	}
