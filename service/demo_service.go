@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	PublicPath = "/home/qydev/var/www/"
+	PublicPath = "F:/Homework_files/"//"/home/qydev/var/www/"
 	UploadPath = PublicPath + "uploads/"
 	PublicURL = "/public/"
 )

@@ -15,6 +15,11 @@ type SuccessResp struct {
 	*model.Demo_order
 }
 
+type ListResp struct {
+	BaseResp
+	List interface{} 		`json:"list"`
+}
+
 func Render200(data interface{}, c *gin.Context) {
 	c.JSON(200, data)
 }

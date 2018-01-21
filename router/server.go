@@ -14,13 +14,13 @@ func Start_Server() {
 	{
 		v1 := router.Group("/v1")
 		// 创建demo oder
-		v1.POST("/demo", Create_demo_Handler)
+		v1.POST("/demo", CreateDemoHandler)
 		// 更新
-		v1.PUT("/demo/:id", Update_demo_Handler)
+		v1.PUT("/demo/:id", UpdateemoHandler)
 		// 获取详情
-		//v1.GET("/users", Get_demoinfo_Handler)
+		v1.GET("/demo/:id", GetDemoInfoHandler)
 		// 获取列表
-		//v1.GET("/users", Get_demo_Handler)
+		v1.GET("/demo-all", GetDemoListHandler)
 	}
 	// 默认启动在8080
 	router.Run(":8080")
