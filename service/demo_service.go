@@ -4,17 +4,22 @@ import (
 	"QY_Homework/model"
 	"github.com/jinzhu/gorm"
 	"errors"
+	"time"
 )
 
 const (
-	PublicPath = "F:/Homework_files/"//"/home/qydev/var/www/"
+	PublicPath = /*"F:/Homework_files/"*/"/home/qydev/var/www/"
 	UploadPath = PublicPath + "uploads/"
+	XlsxPath = PublicPath + "xlsx/"
 	PublicURL = "/public/"
+	XlsxURL = PublicURL + "xlsx/"
 )
 
 
 //向db中添加数据
 func Create_demo(db *gorm.DB, demo *model.Demo_order) (err error){
+	//创建时间
+	demo.CreatedAt = time.Now()
 	err = db.Create(demo).Error
 	return
 }

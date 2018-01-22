@@ -12,12 +12,12 @@ type BaseResp struct {
 
 type SuccessResp struct {
 	BaseResp
-	*model.Demo_order
+	model.Demo_order
 }
 
 type ListResp struct {
 	BaseResp
-	List interface{} 		`json:"list"`
+	List []model.Demo_order 		`json:"list"`
 }
 
 func Render200(data interface{}, c *gin.Context) {

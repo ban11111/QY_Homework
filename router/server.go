@@ -16,11 +16,14 @@ func Start_Server() {
 		// 创建demo oder
 		v1.POST("/demo", CreateDemoHandler)
 		// 更新
-		v1.PUT("/demo/:id", UpdateemoHandler)
+		v1.PUT("/demo/:id", UpdatedemoHandler)
 		// 获取详情
 		v1.GET("/demo/:id", GetDemoInfoHandler)
 		// 获取列表
 		v1.GET("/demo-all", GetDemoListHandler)
+		v1.POST("/demo-all", PostDemoListHandler)
+		//下载xlsx文档
+		v1.GET("/demo-xlsx", GetDemoXlsxHandler)
 	}
 	// 默认启动在8080
 	router.Run(":8080")

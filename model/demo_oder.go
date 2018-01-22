@@ -1,14 +1,18 @@
 package model
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 type Demo_order struct {
 	Id         uint64 			`gorm:"primary_key" json:"id"`
 	Order_id   string			`json:"order_id" binding:"required"`
 	User_name  string			`json:"user_name" binding:"required"`
 	Amount     float64			`json:"amount" binding:"required"`
-	Status     string			`json:"status"`
+	Status     string			`json:"status" binding:"required"`
 	File_url   string			`json:"file_url"`
+	CreatedAt  time.Time        `json:"create_time"`
 }
 
 

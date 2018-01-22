@@ -9,11 +9,7 @@ import (
 	"QY_Homework/service"
 	"QY_Homework/db/table"
 	"fmt"
-	//"errors"
-	"github.com/json-iterator/go"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func CreateDemoHandler(c *gin.Context) {
 	var newdemo *model.Demo_order
@@ -52,47 +48,50 @@ func CreateDemoHandler(c *gin.Context) {
 			return
 		}
 		respinfo := service.BaseResp{true, "添加成功！"}
-		service.Render200(&service.SuccessResp{
+		service.Render200(service.SuccessResp{
 		BaseResp: respinfo,
 		}, c)
 	}
 }
 
-func UpdateemoHandler(c *gin.Context) {
-	var demo *model.Demo_order
+func UpdatedemoHandler(c *gin.Context) {
+	var updatedemo *model.Demo_order
 	if form, err := c.MultipartForm(); err != nil {
 		service.Render400(err.Error(), c)
 		return
 	} else {
 		openedDb := ConnetDB(NewDbConfig())
-		demo, err = Transfer_form_to_model(form.Value)
+		updatedemo, err = Transfer_form_to_model(form.Value)
+
 		//获取ID
 		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 		if err != nil {
 			service.Render400(err.Error(), c)
 			return
 		}
-		demo.Id = id
-		//判断ID 是否已经存在，若不存在就报错//todo fix the bug
-		if err := service.Id_exist(openedDb, demo); err != nil {
+		updatedemo.Id = id
+		fmt.Println("更新之前的数据",updatedemo)
+		//判断ID 是否已经存在，若不存在就报错
+		if err := service.Id_exist(openedDb, updatedemo); err != nil {
 			service.Render400(err.Error(), c)
 			return
 		}
 		//更新文件
-		demo.File_url, err = service.Updatefiles(form.File["file_url"], demo.Id, c)
+		updatedemo.File_url, err = service.Updatefiles(form.File["file_url"], updatedemo.Id, c)
 		if err != nil {
 			service.Render400(err.Error(), c)
 			return
 		}
 		//更新demo
-		if err := service.Update_demo(openedDb, demo); err != nil {
+		if err := service.Update_demo(openedDb, updatedemo); err != nil {
 			service.Render400(err.Error(), c)
 			return
 		}
+		fmt.Println("更新之后的数据",updatedemo)
 		respinfo := service.BaseResp{true, "更新成功！"}
-		service.Render200(&service.SuccessResp{
-			BaseResp:   respinfo,
-			Demo_order: demo,
+		service.Render200(service.SuccessResp{
+			BaseResp:   	respinfo,
+			Demo_order: 	*updatedemo,
 		}, c)
 	}
 }
@@ -103,7 +102,6 @@ func GetDemoInfoHandler(c *gin.Context) {
 	id := c.Param("id")
 	openedDb := ConnetDB(NewDbConfig())
 	openedDb.Where("id = ?", id).First(&DBdata)
-	fmt.Println(DBdata)
 	if DBdata.Id == 0 {
 		service.Render400(fmt.Sprintf("查询不到id为'%d'的数据", id), c)
 		return
@@ -111,24 +109,68 @@ func GetDemoInfoHandler(c *gin.Context) {
 	respinfo := service.BaseResp{true, "查询成功！"}
 	service.Render200(&service.SuccessResp{
 		BaseResp:   respinfo,
-		Demo_order: &DBdata,
+		Demo_order: DBdata,
 	}, c)
 }
-//查询所有记录
+
+//GET 查询所有记录 按id主键排序
 func GetDemoListHandler(c *gin.Context) {
 	var DBdata []model.Demo_order
 	openedDb := ConnetDB(NewDbConfig())
 	openedDb.Find(&DBdata)
-	DBjson, err := json.Marshal(DBdata)
-	fmt.Println(DBjson, err)
 	respinfo := service.BaseResp{true, "查询成功！"}
 	service.Render200(&service.ListResp{
-		BaseResp:   respinfo,
-		List: DBdata,
+		BaseResp: respinfo,
+		List:     DBdata,
 	}, c)
 }
 
-// 从表单中获取用户
+//POST 带条件 查询所有记录
+func PostDemoListHandler(c *gin.Context) {
+	search := c.PostForm("search")
+	sortby := c.PostForm("sortby")
+	var SORT string
+	switch sortby {
+	case "time":
+		SORT = "created_at"
+	case "timedesc":
+		SORT = "created_at desc"
+	case "amount":
+		SORT = "amount"
+	case "amountdesc":
+		SORT = "amount desc"
+	default:
+		service.Render400("前端post数据有误", c)
+	}
+	var DBdata []model.Demo_order
+	openedDb := ConnetDB(NewDbConfig())
+	if search != "" {
+		search = "%" + search + "%"
+		openedDb.Where("user_name LIKE ?", search).Order(SORT).Find(&DBdata)
+	}else{
+		openedDb.Order(sortby).Find(&DBdata)
+	}
+	respinfo := service.BaseResp{true, "查询成功！"}
+	service.Render200(&service.ListResp{
+		BaseResp: respinfo,
+		List:     DBdata,
+	}, c)
+}
+
+//生成xlsx，并redirect到下载地址
+func GetDemoXlsxHandler(c *gin.Context) {
+	if err := service.GetXLSX(); err != nil {
+		service.Render400(err.Error(), c)
+		return
+	}
+	//respinfo := service.BaseResp{true, "xlsx成功生成！"}
+	//service.Render200(&service.SuccessResp{
+	//	BaseResp:   respinfo,
+	//}, c)
+	c.Redirect(301, service.XlsxURL + "Demo_Order.xlsx")
+}
+
+// 从Multipart表单中获取用户
 func ValueFromMultipartForm(key string, f map[string][]string) string {
 	if len(f[key]) > 0 {
 		return f[key][0]
@@ -137,7 +179,7 @@ func ValueFromMultipartForm(key string, f map[string][]string) string {
 	}
 }
 
-// 将表单转换成模型对象
+// 将Multipart表单转换成模型对象
 func Transfer_form_to_model(f map[string][]string) (*model.Demo_order, error) {
 	str := ValueFromMultipartForm("amount", f)
 	//fmt.Println(str)

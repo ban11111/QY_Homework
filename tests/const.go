@@ -6,5 +6,6 @@ const(
 	Createdemo = Version + "/demo"
 	Updatedemo = Version + "/demo/1"
 	Getdemoinfo = Updatedemo
-	Getdemolist = Version + "/demo-all"
+	Postdemolist = Version + "/demo-all"
+	Getdemolist = Postdemolist
 )
