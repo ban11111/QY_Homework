@@ -8,4 +8,5 @@ const(
 	Getdemoinfo = Updatedemo
 	Postdemolist = Version + "/demo-all"
 	Getdemolist = Postdemolist
+	Getdemoxlsx = Version + "/demo-xlsx"
 )

@@ -73,7 +73,7 @@ func UpdatedemoHandler(c *gin.Context) {
 		}
 		updatedemo.Id = id
 		//判断ID 是否已经存在，若不存在就报错
-		if err := service.Id_exist(openedDb,id); err != nil {
+		if err := service.Id_exist(openedDb, id, updatedemo); err != nil {
 			service.Render400(err.Error(), c)
 			return
 		}
@@ -127,8 +127,16 @@ func GetDemoListHandler(c *gin.Context) {
 
 //POST 带条件 查询所有记录
 func PostDemoListHandler(c *gin.Context) {
-	search := c.PostForm("search")
-	sortby := c.PostForm("sortby")
+	var err error
+	var search, sortby string
+	//json
+	var jsonmap map[string]string
+	if err := c.BindJSON(&jsonmap); err != nil {
+		service.Render400(err.Error(), c)
+		return
+	}
+	search = jsonmap["search"]
+	sortby = jsonmap["sortby"]
 	var SORT string
 	switch sortby {
 	case "time":
@@ -146,9 +154,12 @@ func PostDemoListHandler(c *gin.Context) {
 	openedDb := ConnetDB(NewDbConfig())
 	if search != "" {
 		search = "%" + search + "%"
-		openedDb.Where("user_name LIKE ?", search).Order(SORT).Find(&DBdata)
+		err = openedDb.Where("user_name LIKE ?", search).Order(SORT).Find(&DBdata).Error
 	}else{
-		openedDb.Order(sortby).Find(&DBdata)
+		err = openedDb.Order(sortby).Find(&DBdata).Error
+	}
+	if err != nil {
+		service.Render400(err.Error(), c)
 	}
 	respinfo := service.BaseResp{true, "查询成功！"}
 	service.Render200(&service.ListResp{

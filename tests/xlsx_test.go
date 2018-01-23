@@ -7,6 +7,7 @@ import (
 	"time"
 	"QY_Homework/router"
 	"QY_Homework/service"
+	"github.com/gavv/httpexpect"
 )
 
 type XLSXTestSuite struct {
@@ -28,4 +29,10 @@ func (s *XLSXTestSuite) TestXLSX() {
 	err := service.GetXLSX()
 	s.Equal(nil, err, "文档生成失败")
 	fmt.Println("文档生成成功！")
+}
+
+func (s *XLSXTestSuite)TestGetXLSX() {
+	resp := httpexpect.New(s.T(), TestServer).GET(Getdemoxlsx).Expect()
+	resp.Status(200)
+	fmt.Println(resp.Headers())
 }

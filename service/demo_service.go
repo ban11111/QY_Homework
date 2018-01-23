@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"QY_Homework/tools"
+	"fmt"
 )
 
 const (
@@ -41,6 +42,7 @@ func Create_demo(db *gorm.DB, demo *model.Demo_order) (err error) {
 	if err = db.Last(demo).Error; err != nil {
 		return
 	}
+	fmt.Println(demo)
 	return
 }
 
@@ -59,17 +61,23 @@ func Update_demo(db *gorm.DB, demo *model.Demo_order) (err error) {
 		TransactionUpdateDemo.Rollback()
 		return
 	}
-	err = db.Model(demo).Where("id=?", demo.Id).First(demo).Error
+	//更新时，如果files里的id不存在，就会报错。正好用于测试事务。
+	if err = Id_exist(db,demo.Id,&model.Files{}); err != nil {
+		fmt.Println("FFFFFFFFFFFFFFFFFFF", err)
+		TransactionUpdateDemo.Rollback()
+		return
+	}
 	TransactionUpdateDemo.Commit()
 	//事务结束
+	//
+	err = db.Model(demo).Where("id=?", demo.Id).First(demo).Error
 	return
 }
 
 //判断ID是否存在, 需要先连接数据库
-func Id_exist(db *gorm.DB, id uint64) error {
-	var demo *model.Demo_order
-	if db.Where("id = ?", id).First(demo) == nil {
-		return errors.New("数据库中没有该记录，请确认该数据已经建立")
+func Id_exist(db *gorm.DB, id uint64, demo interface{}) error {
+	if err := db.Where("id = ?", id).First(demo).Error; err != nil {
+		return errors.New("数据库中没有该记录，请确认该数据已经建立---"+err.Error())
 	}
 	return nil
 }
@@ -77,6 +85,7 @@ func Id_exist(db *gorm.DB, id uint64) error {
 //同步数据到files表
 func SyncFiles(db *gorm.DB, demo *model.Demo_order) error {
 	files := &model.Files{}
+	//files.Id = demo.Id
 	var i = 0
 	temparry := make([]string, 10)
 	files.File_path = UploadPath + "f" + strconv.FormatUint(demo.Id, 10) + "/"

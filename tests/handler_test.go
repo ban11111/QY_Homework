@@ -24,8 +24,7 @@ type HandlerTestSuite struct {
 	suite.Suite
 }
 
-func TearDownTest(s *HandlerTestSuite) {
-	fmt.Print("测试结束")
+func (suite *HandlerTestSuite)TearDownTest() {
 }
 
 func TestSuite(t *testing.T) {
@@ -34,6 +33,15 @@ func TestSuite(t *testing.T) {
 	//logger.InitLogger(logger.LvlDebug,nil)
 	go router.Start_Server()
 	time.Sleep(100 * time.Millisecond)
+	os.Chdir(CurrentPath)
+	resp := httpexpect.New(t, TestServer).POST(Createdemo).WithMultipart().WithFile("file_url", "./testfile/123.png").WithForm(map[string]string{
+		"order_id":  "test",
+		"user_name": "ban22222",
+		"amount":    "12.12",
+		"status":    "testnew",
+	}).Expect()
+	resp.Status(200)
+	fmt.Println(resp.Body())
 	suite.Run(t, new(HandlerTestSuite))
 }
 
@@ -107,6 +115,21 @@ func (s *HandlerTestSuite) Testupdatedemo() {
 	}
 }
 
+//测试 事务SQL
+func (s *HandlerTestSuite) TestTransaction() {
+	os.Chdir(CurrentPath)
+	connection.ConnetDB(NewDbConfig()).Where("id = ?", "2").Delete(model.Files{})
+	resp := httpexpect.New(s.T(), TestServer).PUT(Updatedemo).WithMultipart().WithFile("file_url", "./testfile/update.jpg").WithForm(map[string]string{
+		"id":        "1",
+		"order_id":  "should fail",
+		"user_name": "should fail",
+		"amount":    "123.456789",
+		"status":    "should fail",
+	}).Expect()
+	resp.Status(400)
+
+}
+
 //测试 查询单条数据
 func (s *HandlerTestSuite) TestGetdemoinfo() {
 	resp := httpexpect.New(s.T(), TestServer).GET(Getdemoinfo).Expect()
@@ -147,10 +170,9 @@ func (s *HandlerTestSuite) TestGetdemolist() {
 
 //测试4种排序查询列表数据
 func (s *HandlerTestSuite) TestPostdemolist() {
-
 	sort := []string{"time", "timedesc", "amount", "amountdesc"}
 	for _, sortby := range sort {
-		resp := httpexpect.New(s.T(), TestServer).POST(Postdemolist).WithForm(map[string]string{
+		resp := httpexpect.New(s.T(), TestServer).POST(Postdemolist).WithJSON(map[string]string{
 			"search": "ban",
 			"sortby": sortby,
 		}).Expect()
