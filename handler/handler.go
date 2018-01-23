@@ -23,7 +23,8 @@ func CreateDemoHandler(c *gin.Context) {
 	} else {
 		openedDb := ConnetDB(NewDbConfig())
 		//新建或更新表字段
-		table.TableUpdate(openedDb)
+		table.DemoTableUpdate(openedDb)
+		table.FilesTableUpdate(openedDb)
 		//fmt.Println("表单数据", form.Value)
 		newdemo, err = Transfer_form_to_model(form.Value)
 		if err != nil {
@@ -50,6 +51,7 @@ func CreateDemoHandler(c *gin.Context) {
 		respinfo := service.BaseResp{true, "添加成功！"}
 		service.Render200(service.SuccessResp{
 		BaseResp: respinfo,
+		Demo_order: *newdemo,
 		}, c)
 	}
 }
@@ -70,9 +72,8 @@ func UpdatedemoHandler(c *gin.Context) {
 			return
 		}
 		updatedemo.Id = id
-		fmt.Println("更新之前的数据",updatedemo)
 		//判断ID 是否已经存在，若不存在就报错
-		if err := service.Id_exist(openedDb, updatedemo); err != nil {
+		if err := service.Id_exist(openedDb,id); err != nil {
 			service.Render400(err.Error(), c)
 			return
 		}
@@ -87,7 +88,6 @@ func UpdatedemoHandler(c *gin.Context) {
 			service.Render400(err.Error(), c)
 			return
 		}
-		fmt.Println("更新之后的数据",updatedemo)
 		respinfo := service.BaseResp{true, "更新成功！"}
 		service.Render200(service.SuccessResp{
 			BaseResp:   	respinfo,

@@ -42,7 +42,7 @@ func GetXLSX() (err error) {
 
 //创建标题
 func MakeTitle(Title model.Demo_order) []string {
-	title := make([]string, 6, 10)
+	title := make([]string, 7, 10)
 	type_ := reflect.ValueOf(&Title).Elem().Type()
 	for i := 0; i < type_.NumField(); i++ {
 		title[i] = type_.Field(i).Name

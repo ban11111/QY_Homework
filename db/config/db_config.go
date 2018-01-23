@@ -32,7 +32,7 @@ func NewDbConfig() *DbConfig {
 }
 
 func SelfIncrease(db *gorm.DB, demo *model.Demo_order) {
-	//var id_value *model.Demo_order
-	db.Select("id").Last(&demo)
-	demo.Id = demo.Id + 1
+	var id_value model.Demo_order
+	db.Last(&id_value)
+	demo.Id = id_value.Id + 1
 }

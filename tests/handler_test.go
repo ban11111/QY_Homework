@@ -46,8 +46,7 @@ func (s *HandlerTestSuite) Testcreatedemowithoutfile() {
 		"status":    "this one will fail",
 	}).Expect()
 	resp.Status(400)
-
-	var respJson *service.BaseResp
+	var respJson service.BaseResp
 	err := json.Unmarshal([]byte(resp.Body().Raw()), &respJson)
 	s.Equal(nil, err, "json转换成对象失败,")
 	s.Equal(false, respJson.Success, respJson.Info)
@@ -68,9 +67,8 @@ func (s *HandlerTestSuite) Testcreatedemowithfile() {
 	if err != nil {
 		fmt.Println("json转换成对象失败!!", err)
 	}
-	fmt.Println(respJson)
 	s.Equal(true, respJson.Success, respJson.Info)
-	var DBdata []*model.Demo_order
+	var DBdata []model.Demo_order
 	connection.ConnetDB(NewDbConfig()).Model(&model.Demo_order{}).Find(&DBdata)
 	s.Equal(true, len(DBdata) > 0)
 	s.NotEqual(0, DBdata[len(DBdata)-1].Id, "Id为0,不合法")
@@ -79,7 +77,7 @@ func (s *HandlerTestSuite) Testcreatedemowithfile() {
 	s.Equal(99.1206, DBdata[len(DBdata)-1].Amount, "Amount 不一致")
 	s.Equal("new", DBdata[len(DBdata)-1].Status, "Status 不一致")
 	s.Equal(true, len(DBdata[len(DBdata)-1].File_url) > 0, "file url 为空！")
-	//s.Equal(true, len(DBdata[len(DBdata)-1].CreatedAt)>0)
+	s.Equal(respJson.Demo_order, DBdata[len(DBdata)-1])
 }
 
 //更新demo_order 测试(更新第一条数据)
@@ -95,18 +93,17 @@ func (s *HandlerTestSuite) Testupdatedemo() {
 	resp.Status(200)
 	var respJson service.SuccessResp
 	err := json.Unmarshal([]byte(resp.Body().Raw()), &respJson)
-	fmt.Println(respJson)
 	//logger.Info("errr","er",err)
 	s.Equal(nil, err, "json转换成对象失败!!")
 	s.Equal(true, respJson.Success, respJson.Info)
 
 	if respJson.Success == true {
-		s.Equal(1, respJson.Id, "Id不对")
+		s.Equal(uint64(1), respJson.Id, "Id不对")
 		s.Equal("123456789", respJson.Order_id, "Order id 不一致")
 		s.Equal("ban123456", respJson.User_name, "User name 不一致")
-		s.Equal("0.123456", respJson.Amount, "Amount 不一致")
+		s.Equal(0.123456, respJson.Amount, "Amount 不一致")
 		s.Equal("updated", respJson.Status, "Status 不一致")
-		s.Equal("localhost:8080/public/testfile/update.jpg", respJson.File_url, "file url 不一致")
+		s.Equal("localhost:8080/public/f1/", respJson.File_url, "file url 不一致")
 	}
 }
 
@@ -120,7 +117,7 @@ func (s *HandlerTestSuite) TestGetdemoinfo() {
 	var DBdata model.Demo_order
 	openedDb := connection.ConnetDB(NewDbConfig())
 	openedDb.Where("id = ?", 1).First(&DBdata)
-	s.Equal(respJson.Demo_order, &DBdata, "返回的数据与数据库中的数据不匹配")
+	s.Equal(respJson.Demo_order, DBdata, "返回的数据与数据库中的数据不匹配")
 }
 
 //测试 查询单条数据失败

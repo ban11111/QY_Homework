@@ -7,10 +7,18 @@ import (
 )
 
 //新建或更新表字段
-func TableUpdate(openedDb *gorm.DB,) {
-	if openedDb.HasTable(&model.Demo_order{}) == false {
-		openedDb.CreateTable(&model.Demo_order{})
+func DemoTableUpdate(db *gorm.DB,) {
+	if db.HasTable(&model.Demo_order{}) == false {
+		db.CreateTable(&model.Demo_order{})
 	} else {
-		openedDb.AutoMigrate(&model.Demo_order{})
+		db.AutoMigrate(&model.Demo_order{})
+	}
+}
+
+func FilesTableUpdate(db *gorm.DB) {
+	if db.HasTable(&model.Files{}) == false {
+		db.CreateTable(&model.Files{})
+	} else {
+		db.AutoMigrate(&model.Files{})
 	}
 }
