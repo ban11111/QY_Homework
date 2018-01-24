@@ -89,7 +89,8 @@ func SyncFiles(db *gorm.DB, demo *model.Demo_order) error {
 	files := &model.Files{}
 	files.Id = demo.Id
 	var i = 0
-	temparry := make([]string, 10)
+	temparry := make([]string, 11) //文件数量上限10
+	//var temparry []string
 	files.File_path = UploadPath + "f" + strconv.FormatUint(demo.Id, 10) + "/"
 	err := filepath.Walk(files.File_path, func(files_path string, info os.FileInfo, err error) error {
 		if info == nil {

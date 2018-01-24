@@ -189,9 +189,13 @@ func (s *HandlerTestSuite) TestPostdemolist() {
 		s.Equal(nil, err, "json转换成对象失败!!")
 		switch sortby {
 		case "time":
-			//s.Equal(true, respJson.List[0].CreatedAt.Before(respJson.List[1].CreatedAt))
+			if len(respJson.List) > 3 {
+				s.Equal(true, respJson.List[0].CreatedAt.Before(respJson.List[len(respJson.List)-1].CreatedAt))
+			}
 		case "timedesc":
-			//s.Equal(true, respJson.List[0].CreatedAt.After(respJson.List[1].CreatedAt))
+			if len(respJson.List) > 3 {
+				s.Equal(true, respJson.List[0].CreatedAt.After(respJson.List[len(respJson.List)-1].CreatedAt))
+			}
 		case "amount":
 			s.Equal(true, respJson.List[0].Amount <= respJson.List[1].Amount)
 		case "amountdesc":

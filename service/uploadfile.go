@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"errors"
+	"QY_Homework/tools"
+	"fmt"
 )
 
 //上传文件，并返回file—url
@@ -23,8 +25,17 @@ func Uploadfiles(file []*multipart.FileHeader,id uint64, c *gin.Context) (file_u
 			return "", err
 		}
 	}
+	var filename string
 	for _, f := range file {
-		err = c.SaveUploadedFile(f, file_path + string([]rune(f.Filename)[10:]))
+		switch tools.ENV {
+		case "test":
+			filename = string([]rune(f.Filename)[10:])
+		case "dev":
+			filename = f.Filename
+		default:
+			filename = string([]rune(f.Filename)[10:])
+		}
+		err = c.SaveUploadedFile(f, file_path + filename)
 		if err != nil {
 			return "", err
 		}
@@ -39,9 +50,19 @@ func Updatefiles(file []*multipart.FileHeader,id uint64, c *gin.Context) (file_u
 	}
 	fpath := "f" + strconv.FormatUint(id,10)
 	file_path := UploadPath + fpath + "/"
+	var filename string
 	for _, f := range file{
-		err = c.SaveUploadedFile(f, file_path + string([]rune(f.Filename)[10:]))
+		switch tools.ENV {
+		case "test":
+			filename = string([]rune(f.Filename)[10:])
+		case "dev":
+			filename = f.Filename
+		default:
+			filename = string([]rune(f.Filename)[10:])
+		}
+		err = c.SaveUploadedFile(f, file_path + filename)
 		if err != nil {
+			fmt.Println("wendang wenti ", err)
 			return "", err
 		}
 	}
@@ -52,5 +73,6 @@ func Exist (path string) bool{
 	_, err := os.Open(path)
 	return os.IsExist(err)
 }
+
 
 //删除文件//todo
