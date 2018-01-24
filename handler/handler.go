@@ -9,6 +9,7 @@ import (
 	"QY_Homework/service"
 	"QY_Homework/db/table"
 	"fmt"
+	"errors"
 )
 
 func CreateDemoHandler(c *gin.Context) {
@@ -64,19 +65,21 @@ func UpdatedemoHandler(c *gin.Context) {
 	} else {
 		openedDb := ConnetDB(NewDbConfig())
 		updatedemo, err = Transfer_form_to_model(form.Value)
-
+		//fmt.Println("更新前",updatedemo)
 		//获取ID
 		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 		if err != nil {
 			service.Render400(err.Error(), c)
 			return
 		}
+		//fmt.Println("更新前中",updatedemo)
 		updatedemo.Id = id
-		//判断ID 是否已经存在，若不存在就报错
-		if err := service.Id_exist(openedDb, id, updatedemo); err != nil {
-			service.Render400(err.Error(), c)
+		//判断ID 是否已经存在，若不存在就报错,注意一定要传空值的模型进去
+		if openedDb.Where("id = ?", id).First(&model.Demo_order{}).RecordNotFound() {
+			service.Render400(errors.New("该条记录不存在!不能更新!").Error(), c)
 			return
 		}
+		//fmt.Println("更新中",updatedemo)
 		//更新文件
 		updatedemo.File_url, err = service.Updatefiles(form.File["file_url"], updatedemo.Id, c)
 		if err != nil {
@@ -88,6 +91,7 @@ func UpdatedemoHandler(c *gin.Context) {
 			service.Render400(err.Error(), c)
 			return
 		}
+		//fmt.Println("更新后",updatedemo)
 		respinfo := service.BaseResp{true, "更新成功！"}
 		service.Render200(service.SuccessResp{
 			BaseResp:   	respinfo,
@@ -100,9 +104,10 @@ func UpdatedemoHandler(c *gin.Context) {
 func GetDemoInfoHandler(c *gin.Context) {
 	var DBdata model.Demo_order
 	id := c.Param("id")
+	idu,_ := strconv.ParseUint(id, 10, 64)
 	openedDb := ConnetDB(NewDbConfig())
-	openedDb.Where("id = ?", id).First(&DBdata)
-	if DBdata.Id == 0 {
+	//如果id不存在,则返回错误
+	if openedDb.Where("id = ?", idu).First(&DBdata).RecordNotFound() {
 		service.Render400(fmt.Sprintf("查询不到id为'%d'的数据", id), c)
 		return
 	}

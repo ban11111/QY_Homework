@@ -52,3 +52,5 @@ func Exist (path string) bool{
 	_, err := os.Open(path)
 	return os.IsExist(err)
 }
+
+//删除文件//todo

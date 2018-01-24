@@ -10,11 +10,10 @@ import (
 	"os"
 	"strings"
 	"QY_Homework/tools"
-	"fmt"
 )
 
 const (
-	PublicPath = /*"F:/Homework_files/"*/ "/home/qydev/var/www/"
+	PublicPath = "/home/qydev/var/www/"
 	UploadPath = PublicPath + "uploads/"
 	XlsxPath   = PublicPath + "xlsx/"
 	PublicURL  = "/public/"
@@ -27,11 +26,11 @@ func Create_demo(db *gorm.DB, demo *model.Demo_order) (err error) {
 	demo.CreatedAt = time.Now()
 	//事务开始
 	TransactionCreateDemo := db.Begin()
-	if err = db.Create(demo).Error; err != nil {
+	if err = TransactionCreateDemo.Create(demo).Error; err != nil {
 		TransactionCreateDemo.Rollback()
 		return
 	}
-	if err = SyncFiles(db, demo); err != nil {
+	if err = SyncFiles(TransactionCreateDemo, demo); err != nil {
 		TransactionCreateDemo.Rollback()
 		return
 	}
@@ -42,7 +41,6 @@ func Create_demo(db *gorm.DB, demo *model.Demo_order) (err error) {
 	if err = db.Last(demo).Error; err != nil {
 		return
 	}
-	fmt.Println(demo)
 	return
 }
 
@@ -53,17 +51,17 @@ func Update_demo(db *gorm.DB, demo *model.Demo_order) (err error) {
 	}
 	//事务开始
 	TransactionUpdateDemo := db.Begin()
-	if err = db.Model(demo).Where("id=?", demo.Id).Update(demo).Error; err != nil {
-		TransactionUpdateDemo.Rollback()
-		return
-	}
-	if err = SyncFiles(db, demo); err != nil {
+	if err = TransactionUpdateDemo.Model(demo).Where("id=?", demo.Id).Update(demo).Error; err != nil {
 		TransactionUpdateDemo.Rollback()
 		return
 	}
 	//更新时，如果files里的id不存在，就会报错。正好用于测试事务。
-	if err = Id_exist(db,demo.Id,&model.Files{}); err != nil {
-		fmt.Println("FFFFFFFFFFFFFFFFFFF", err)
+	if TransactionUpdateDemo.Where("id = ?", demo.Id).First(&model.Files{}).RecordNotFound() {
+		TransactionUpdateDemo.Rollback()
+		return errors.New("files表里没有该条记录,无法更新")
+	}
+	if err = SyncFiles(TransactionUpdateDemo, demo); err != nil {
+
 		TransactionUpdateDemo.Rollback()
 		return
 	}
@@ -74,18 +72,22 @@ func Update_demo(db *gorm.DB, demo *model.Demo_order) (err error) {
 	return
 }
 
-//判断ID是否存在, 需要先连接数据库
-func Id_exist(db *gorm.DB, id uint64, demo interface{}) error {
-	if err := db.Where("id = ?", id).First(demo).Error; err != nil {
-		return errors.New("数据库中没有该记录，请确认该数据已经建立---"+err.Error())
-	}
-	return nil
-}
+
+/////////////////////////   废弃,发现gorm自带RecordNotFound方法 ...............
+//判断ID是否存在, 需要先连接数据库  //一定要注意不要传有值的demo来查找,否则demo本身的数据就变了 //除非顺便取值!
+//func Id_exist(db *gorm.DB, id uint64, demo interface{}) bool {
+//	if db.Where("id = ?", id).First(demo).RecordNotFound(){
+//		fmt.Println("err FFFFF error error not found")
+//		return false
+//	}
+//	fmt.Println("判断ID存在之后",demo)
+//	return true
+//}
 
 //同步数据到files表
 func SyncFiles(db *gorm.DB, demo *model.Demo_order) error {
 	files := &model.Files{}
-	//files.Id = demo.Id
+	files.Id = demo.Id
 	var i = 0
 	temparry := make([]string, 10)
 	files.File_path = UploadPath + "f" + strconv.FormatUint(demo.Id, 10) + "/"
@@ -103,10 +105,17 @@ func SyncFiles(db *gorm.DB, demo *model.Demo_order) error {
 	if err != nil {
 		return err
 	}
+	files.File_path += tools.StringJoin(temparry, ",")
+
 	if err = files.FilesIsValid(); err != nil{
 		return err
 	}
-	files.File_path += tools.StringJoin(temparry, ",")
+	//如果id已经存在,则更新,//mark 一下,忘了加Model,导致出错,update要加上model
+	if !db.Where("id = ?", files.Id).First(&model.Files{}).RecordNotFound() {
+		err = db.Model(files).Where("id = ?", demo.Id).Update(files).Error
+		return err
+	}
 	err = db.Create(files).Error
 	return err
+
 }

@@ -27,7 +27,7 @@ func TestSuiteXLSX(t *testing.T) {
 
 func (s *XLSXTestSuite) TestXLSX() {
 	err := service.GetXLSX()
-	s.Equal(nil, err, "文档生成失败")
+	s.Equal(nil, err, "文档生成失败!!")
 	fmt.Println("文档生成成功！")
 }
 

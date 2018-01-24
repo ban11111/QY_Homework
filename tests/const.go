@@ -9,4 +9,5 @@ const(
 	Postdemolist = Version + "/demo-all"
 	Getdemolist = Postdemolist
 	Getdemoxlsx = Version + "/demo-xlsx"
+	Transction = Version + "/demo/2"
 )

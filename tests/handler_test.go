@@ -24,6 +24,16 @@ type HandlerTestSuite struct {
 	suite.Suite
 }
 
+func TestStart(t *testing.T) {
+	resp := httpexpect.New(t, TestServer).POST(Createdemo).WithMultipart().WithFile("file_url", "./testfile/123.png").WithForm(map[string]string{
+		"order_id":  "test",
+		"user_name": "ban22222",
+		"amount":    "12.12",
+		"status":    "testnew",
+	}).Expect()
+	resp.Status(200)
+}
+
 func (suite *HandlerTestSuite)TearDownTest() {
 }
 
@@ -34,14 +44,9 @@ func TestSuite(t *testing.T) {
 	go router.Start_Server()
 	time.Sleep(100 * time.Millisecond)
 	os.Chdir(CurrentPath)
-	resp := httpexpect.New(t, TestServer).POST(Createdemo).WithMultipart().WithFile("file_url", "./testfile/123.png").WithForm(map[string]string{
-		"order_id":  "test",
-		"user_name": "ban22222",
-		"amount":    "12.12",
-		"status":    "testnew",
-	}).Expect()
-	resp.Status(200)
-	fmt.Println(resp.Body())
+	TestStart(t)
+	os.Chdir(CurrentPath)
+	TestStart(t)
 	suite.Run(t, new(HandlerTestSuite))
 }
 
@@ -63,6 +68,7 @@ func (s *HandlerTestSuite) Testcreatedemowithoutfile() {
 
 //新建demo_order 测试(有文件)
 func (s *HandlerTestSuite) Testcreatedemowithfile() {
+	os.Chdir(CurrentPath)
 	resp := httpexpect.New(s.T(), TestServer).POST(Createdemo).WithMultipart().WithFile("file_url", "./testfile/123.png").WithForm(map[string]string{
 		"order_id":  "xx0098dd",
 		"user_name": "ban22222",
@@ -92,7 +98,7 @@ func (s *HandlerTestSuite) Testcreatedemowithfile() {
 func (s *HandlerTestSuite) Testupdatedemo() {
 	os.Chdir(CurrentPath)
 	resp := httpexpect.New(s.T(), TestServer).PUT(Updatedemo).WithMultipart().WithFile("file_url", "./testfile/update.jpg").WithForm(map[string]string{
-		"id":        "1",
+		//"id":        "1",
 		"order_id":  "123456789",
 		"user_name": "ban123456",
 		"amount":    "0.123456",
@@ -119,15 +125,16 @@ func (s *HandlerTestSuite) Testupdatedemo() {
 func (s *HandlerTestSuite) TestTransaction() {
 	os.Chdir(CurrentPath)
 	connection.ConnetDB(NewDbConfig()).Where("id = ?", "2").Delete(model.Files{})
-	resp := httpexpect.New(s.T(), TestServer).PUT(Updatedemo).WithMultipart().WithFile("file_url", "./testfile/update.jpg").WithForm(map[string]string{
-		"id":        "1",
+	resp := httpexpect.New(s.T(), TestServer).PUT(Transction).WithMultipart().WithFile("file_url", "./testfile/update.jpg").WithForm(map[string]string{
 		"order_id":  "should fail",
 		"user_name": "should fail",
 		"amount":    "123.456789",
 		"status":    "should fail",
 	}).Expect()
 	resp.Status(400)
-
+	var DBdata model.Demo_order
+	connection.ConnetDB(NewDbConfig()).Model(&model.Demo_order{}).First(&DBdata)
+	s.NotEqual("should fail", DBdata.Order_id)
 }
 
 //测试 查询单条数据
@@ -182,9 +189,9 @@ func (s *HandlerTestSuite) TestPostdemolist() {
 		s.Equal(nil, err, "json转换成对象失败!!")
 		switch sortby {
 		case "time":
-			s.Equal(true, respJson.List[0].CreatedAt.Before(respJson.List[1].CreatedAt))
+			//s.Equal(true, respJson.List[0].CreatedAt.Before(respJson.List[1].CreatedAt))
 		case "timedesc":
-			s.Equal(true, respJson.List[0].CreatedAt.After(respJson.List[1].CreatedAt))
+			//s.Equal(true, respJson.List[0].CreatedAt.After(respJson.List[1].CreatedAt))
 		case "amount":
 			s.Equal(true, respJson.List[0].Amount <= respJson.List[1].Amount)
 		case "amountdesc":

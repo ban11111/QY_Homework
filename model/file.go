@@ -12,7 +12,7 @@ func (files *Files)FilesIsValid() (err error) {
 	//case files.Id == 0:
 	//	err = errors.New("id错误")
 	case files.File_path == "":
-		err = errors.New("Order id 不能为空")
+		err = errors.New("path 不能为空")
 	default:
 		err = nil
 	}
