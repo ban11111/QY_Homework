@@ -26,6 +26,7 @@ func Create_demo(db *gorm.DB, demo *model.Demo_order) (err error) {
 	demo.CreatedAt = time.Now()
 	//事务开始
 	TransactionCreateDemo := db.Begin()
+	defer TransactionCreateDemo.Rollback()
 	if err = TransactionCreateDemo.Create(demo).Error; err != nil {
 		TransactionCreateDemo.Rollback()
 		return

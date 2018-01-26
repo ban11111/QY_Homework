@@ -8,21 +8,20 @@ import (
 	"QY_Homework/router"
 	"QY_Homework/service"
 	"github.com/gavv/httpexpect"
+	"os"
+	"QY_Homework/test_configs"
 )
 
 type XLSXTestSuite struct {
 	suite.Suite
 }
 
-//func TearDownTest(s *XLSXTestSuite) {
-//	fmt.Print("测试结束")
-//}
-
 func TestSuiteXLSX(t *testing.T) {
 	//logger.InitLogger(logger.LvlDebug,nil)
 	go router.Start_Server()
 	time.Sleep(100 * time.Millisecond)
 	suite.Run(t, new(XLSXTestSuite))
+	os.Remove("/home/qydev/var/www/xlsx/Demo_Order.xlsx")
 }
 
 func (s *XLSXTestSuite) TestXLSX() {
@@ -32,7 +31,7 @@ func (s *XLSXTestSuite) TestXLSX() {
 }
 
 func (s *XLSXTestSuite)TestGetXLSX() {
-	resp := httpexpect.New(s.T(), TestServer).GET(Getdemoxlsx).Expect()
+	resp := httpexpect.New(s.T(), test_configs.TestServer).GET(test_configs.Getdemoxlsx).Expect()
 	resp.Status(200)
 	fmt.Println(resp.Headers())
 }

@@ -4,12 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"strconv"
 	. "QY_Homework/db/connection"
-	. "QY_Homework/db/config"
 	"QY_Homework/model"
 	"QY_Homework/service"
 	"QY_Homework/db/table"
 	"fmt"
 	"errors"
+	"QY_Homework/db/configs"
+	"io/ioutil"
 )
 
 func CreateDemoHandler(c *gin.Context) {
@@ -22,7 +23,7 @@ func CreateDemoHandler(c *gin.Context) {
 		service.Render400(err.Error(), c)
 		return
 	} else {
-		openedDb := ConnetDB(NewDbConfig())
+		openedDb := ConnetDB()
 		//新建或更新表字段
 		table.DemoTableUpdate(openedDb)
 		table.FilesTableUpdate(openedDb)
@@ -33,7 +34,7 @@ func CreateDemoHandler(c *gin.Context) {
 			return
 		}
 		//id自増
-		SelfIncrease(openedDb, newdemo)
+		configs.SelfIncrease(openedDb, newdemo)
 		//上传文件（可以上传多个文件）,需要放在id生成之后
 		newdemo.File_url, err = service.Uploadfiles(form.File["file_url"], newdemo.Id, c)
 		if err != nil {
@@ -63,7 +64,7 @@ func UpdatedemoHandler(c *gin.Context) {
 		service.Render400(err.Error(), c)
 		return
 	} else {
-		openedDb := ConnetDB(NewDbConfig())
+		openedDb := ConnetDB()
 		updatedemo, err = Transfer_form_to_model(form.Value)
 		//fmt.Println("更新前",updatedemo)
 		//获取ID
@@ -105,7 +106,7 @@ func GetDemoInfoHandler(c *gin.Context) {
 	var DBdata model.Demo_order
 	id := c.Param("id")
 	idu,_ := strconv.ParseUint(id, 10, 64)
-	openedDb := ConnetDB(NewDbConfig())
+	openedDb := ConnetDB()
 	//如果id不存在,则返回错误
 	if openedDb.Where("id = ?", idu).First(&DBdata).RecordNotFound() {
 		service.Render400(fmt.Sprintf("查询不到id为'%d'的数据", id), c)
@@ -121,7 +122,7 @@ func GetDemoInfoHandler(c *gin.Context) {
 //GET 查询所有记录 按id主键排序
 func GetDemoListHandler(c *gin.Context) {
 	var DBdata []model.Demo_order
-	openedDb := ConnetDB(NewDbConfig())
+	openedDb := ConnetDB()
 	openedDb.Find(&DBdata)
 	respinfo := service.BaseResp{true, "查询成功！"}
 	service.Render200(&service.ListResp{
@@ -156,7 +157,7 @@ func PostDemoListHandler(c *gin.Context) {
 		service.Render400("前端post数据有误", c)
 	}
 	var DBdata []model.Demo_order
-	openedDb := ConnetDB(NewDbConfig())
+	openedDb := ConnetDB()
 	if search != "" {
 		search = "%" + search + "%"
 		err = openedDb.Where("user_name LIKE ?", search).Order(SORT).Find(&DBdata).Error
@@ -183,7 +184,16 @@ func GetDemoXlsxHandler(c *gin.Context) {
 	//service.Render200(&service.SuccessResp{
 	//	BaseResp:   respinfo,
 	//}, c)
-	c.Redirect(301, service.XlsxURL + "Demo_Order.xlsx")
+	//c.File()
+	//c.File(service.XlsxPath + "Demo_Order.xlsx")
+	c.Writer.Header().Set("content-type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Writer.Header().Set("Content-Disposition", "attachment;filename=123.xlsx")
+	data, err := ioutil.ReadFile(service.XlsxPath + "Demo_Order.xlsx")
+	if err != nil {
+		service.Render400(err.Error(), c)
+		return
+	}
+	c.Writer.Write(data)
 }
 
 // 从Multipart表单中获取用户

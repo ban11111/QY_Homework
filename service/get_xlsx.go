@@ -4,8 +4,8 @@ import (
 	"github.com/tealeg/xlsx"
 	"QY_Homework/model"
 	"QY_Homework/db/connection"
-	"QY_Homework/db/config"
 	"reflect"
+	//"QY_Homework/db/configs"
 )
 
 //生成excel文档
@@ -26,7 +26,7 @@ func GetXLSX() (err error) {
 	row.WriteSlice(&title, -1)
 	//写入数据
 	var DemoToWrite []model.Demo_order
-	openedDB := connection.ConnetDB(config.NewDbConfig())
+	openedDB := connection.ConnetDB()
 	openedDB.Find(&DemoToWrite)
 	for i := range DemoToWrite {
 		row = sheet.AddRow()

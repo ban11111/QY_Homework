@@ -3,12 +3,14 @@ package connection
 import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"QY_Homework/db/config"
 	"fmt"
 	"errors"
+	"QY_Homework/tools"
+	"QY_Homework/test_configs"
+	"QY_Homework/db/configs"
 )
 
-func check_config(config *config.DbConfig) error {
+func check_config(config *configs.DbConfig) error {
 	var err error
 	if len(config.DbName) == 0 {
 		err = errors.New("db_name 不能为空")
@@ -34,8 +36,15 @@ func check_config(config *config.DbConfig) error {
 }
 
 var ConnetedDB *gorm.DB
-
-func ConnetDB(config *config.DbConfig) (ConnetedDB *gorm.DB){
+//重写ConnetDB,实现根据env配置
+func ConnetDB() (ConnetedDB *gorm.DB){
+	var config *configs.DbConfig
+	switch tools.ENV {
+	case "test":
+		config = test_configs.DbConfigforTest()
+	case "dev" :
+		config = configs.NewDbConfig()
+	}
 	if ConnetedDB != nil {
 		return
 	}
@@ -50,7 +59,14 @@ func ConnetDB(config *config.DbConfig) (ConnetedDB *gorm.DB){
 }
 
 
-func ConnetDBtoCreate(config *config.DbConfig) (ConnetedDB *gorm.DB){
+func ConnetDBtoCreate() (ConnetedDB *gorm.DB){
+	var config *configs.DbConfig
+	switch tools.ENV {
+	case "test":
+		config = test_configs.DbConfigforTest()
+	case "dev" :
+		config = configs.NewDbConfig()
+	}
 	if ConnetedDB != nil {
 		return
 	}
